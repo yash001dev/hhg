@@ -19,6 +19,7 @@ import {
   IconButton,
   TextField,
 } from "@material-ui/core";
+import TableValidation from "./table.validate";
 
 const columns = [
   { id: "name", label: "Name", minWidth: 170 },
@@ -84,6 +85,9 @@ export default function StickyHeadTable() {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [rows, setRows] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [btnClick, setBtnClick] = useState(false);
 
   // DialogContent
   const [open, setOpen] = React.useState(false);
@@ -108,6 +112,10 @@ export default function StickyHeadTable() {
       ...handleChange,
       [name]: value,
     });
+
+    if (isSubmitting) {
+      setErrors(TableValidation(handleChange));
+    }
   };
 
   //End Dialog Content
@@ -133,14 +141,32 @@ export default function StickyHeadTable() {
   const onFormSubmit = (e) => {
     console.log("Form Submit");
     // e.preventDefault();
-    const { email, position, name } = handleChange;
+
     console.log("HandleChange:", handleChange);
-    setRows((rows) => [
-      ...rows,
-      { id: Math.random(), name: name, email: email, position: position },
-    ]);
-    handleClose();
+    setErrors(TableValidation(handleChange));
+    setIsSubmitting(true);
+    setBtnClick(true);
+    // setRows((rows) => [
+    //   ...rows,
+    //   { id: Math.random(), name: name, email: email, position: position },
+    // ]);
+    // handleClose();
   };
+
+  useEffect(() => {
+    if (btnClick) {
+      console.log("ERRORS:", Object.keys(errors));
+      if (Object.keys(errors).length === 0 && isSubmitting) {
+        const { email, position, name } = handleChange;
+        setRows((rows) => [
+          ...rows,
+          { id: Math.random(), name: name, email: email, position: position },
+        ]);
+        handleClose();
+      }
+      setBtnClick(false);
+    }
+  }, [errors, btnClick]);
 
   return (
     <>
@@ -225,6 +251,8 @@ export default function StickyHeadTable() {
               type="text"
               fullWidth
               onChange={changeHandler}
+              error={errors.name && true}
+              helperText={errors.name && errors.name}
             />
 
             <TextField
@@ -235,6 +263,8 @@ export default function StickyHeadTable() {
               type="text"
               fullWidth
               onChange={changeHandler}
+              error={errors.email && true}
+              helperText={errors.email && errors.email}
             />
 
             <TextField
@@ -245,6 +275,8 @@ export default function StickyHeadTable() {
               type="text"
               fullWidth
               onChange={changeHandler}
+              error={errors.position && true}
+              helperText={errors.position && errors.position}
             />
           </DialogContent>
           <DialogActions>
